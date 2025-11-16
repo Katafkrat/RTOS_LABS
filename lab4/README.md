@@ -1,39 +1,50 @@
-# RTOS Laboratory Work #3 - Variant 2
+# RTOS Laboratory Work #4 - Variant 2
 
-This project demonstrates inter-task communication in FreeRTOS using Queues.
+This project demonstrates synchronization between tasks using a **Binary Semaphore** in FreeRTOS.
 
 ## Student Information
 * **Variant:** 2
-* **Number of Tasks:** 3 (Producer, Consumer, Monitor)
+* **Mechanism:** Binary Semaphore
+* **Tasks:** 3 (Sensor A, Sensor B, Handler)
 * **Platform:** FreeRTOS Windows Simulator (MSVC)
 
 ## Task Description
-1.  **Queue Configuration:**
-    * Type: Structure `sensor_data_t` containing `float temp` and `uint32_t id`.
-    * Length: 10 items.
 
-2.  **Producer Task:**
-    * Generates simulated sensor data.
-    * Sends data to the queue with **0 timeout** (non-blocking).
-    * If the queue is full, the data is dropped, and a warning is printed.
+The goal is to simulate two sensors sending signals to a single handler. Since a Binary Semaphore can only hold a signal (taken/given) but not data, a shared variable is used to identify the sender.
 
-3.  **Consumer Task:**
-    * Waits for data from the queue with a **500ms timeout**.
-    * Prints received data or a timeout message if no data arrives.
+1.  **Binary Semaphore (`xBinarySemaphore`):**
+    * Created using `xSemaphoreCreateBinary()`.
+    * Acts as a signaling flag.
 
-4.  **Monitor Task (Additional Task):**
-    * Periodically (every 1000ms) checks the status of the queue using `uxQueueMessagesWaiting()`.
-    * Displays the number of messages currently waiting in the queue.
+2.  **Task: Sensor A:**
+    * Runs every **500 ms**.
+    * Sets global `SenderID = 1`.
+    * Calls `xSemaphoreGive()` to signal an event.
+
+3.  **Task: Sensor B:**
+    * Runs every **900 ms**.
+    * Sets global `SenderID = 2`.
+    * Calls `xSemaphoreGive()` to signal an event.
+
+4.  **Task: Handler:**
+    * Waiting in Blocked state calling `xSemaphoreTake(..., portMAX_DELAY)`.
+    * Unblocks immediately when any sensor gives the semaphore.
+    * Reads the ID and prints which sensor triggered the alarm.
 
 ## How to Run
 1.  Open `RTOSDemo.sln` in Visual Studio.
-2.  Ensure `main.c` contains the Variant 2 code (Lab 3).
-3.  Exclude other main files (like `main_blinky.c`, `main_full.c`, or Lab 2 files) from the build.
+2.  Ensure `main.c` contains the Lab 4 (Variant 2) code.
+3.  Exclude conflicting main files from the build.
 4.  Build and Run (F5).
 
 ## Expected Output
-Console will show:
-- Producer sending IDs and Temps.
-- Consumer receiving and processing them.
-- Monitor periodically reporting queue usage (e.g., "Messages in Queue: 0 / 10" or higher if Consumer is slow).
-- "Queue FULL" messages if Producer is faster than Consumer (controlled by delays).
+The console will show mixed signals from Sensor A and Sensor B, processed by the Handler immediately after generation.
+
+```text
+[Sensor A] Signal Generated (500ms)
+   >>> [Handler] CAUGHT SIGNAL from Sensor ID: 1 at Tick: 500
+[Sensor B] Signal Generated (900ms)
+   >>> [Handler] CAUGHT SIGNAL from Sensor ID: 2 at Tick: 900
+[Sensor A] Signal Generated (500ms)
+   >>> [Handler] CAUGHT SIGNAL from Sensor ID: 1 at Tick: 1000
+...
