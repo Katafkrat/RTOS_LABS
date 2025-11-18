@@ -49,7 +49,6 @@ void vApplicationStackOverflowHook(TaskHandle_t pxTask, char* pcTaskName);
 void vApplicationTickHook(void);
 void vApplicationGetIdleTaskMemory(StaticTask_t** ppxIdleTaskTCBBuffer, StackType_t** ppxIdleTaskStackBuffer, configSTACK_DEPTH_TYPE* puxIdleTaskStackSize);
 void vApplicationGetTimerTaskMemory(StaticTask_t** ppxTimerTaskTCBBuffer, StackType_t** ppxTimerTaskStackBuffer, uint32_t* pulTimerTaskStackSize);
-/* Цей хук був відсутній */
 void vApplicationDaemonTaskStartupHook(void);
 
 /* --- DATA STRUCTURES --- */
